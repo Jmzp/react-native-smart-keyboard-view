@@ -144,6 +144,67 @@ Standalone hook for keyboard state. Returns `{ isVisible, height, frame }`.
 | `enableOnAndroid` default `false` | default `true` | Now enabled by default |
 | All other props | Same | Backward compatible |
 
+## Testing
+
+The library includes a comprehensive test suite built with Jest and React Native Testing Library.
+
+### Run tests
+
+```bash
+yarn test --coverage
+```
+
+### Current coverage
+
+| Module | Statements | Branches | Functions | Lines |
+|--------|-----------|----------|-----------|-------|
+| Overall | ~65% | ~55% | ~64% | ~65% |
+| `platform.ts` | 100% | 100% | 100% | 100% |
+| `KeyboardAwareScrollView` | ~77% | ~79% | ~67% | ~77% |
+| `KeyboardAwareFlatList` | ~75% | ~43% | ~67% | ~75% |
+| `KeyboardAwareSectionList` | ~75% | ~43% | ~67% | ~75% |
+| `useKeyboardAwareScroll` | ~65% | ~54% | ~80% | ~67% |
+| `useKeyboard` | ~43% | 100% | ~36% | ~41% |
+| `measureElement` | ~50% | ~75% | ~33% | ~50% |
+
+### Test structure
+
+```
+__tests__/
+├── helpers/
+│   ├── mockRN.ts          # React Native module mocks (Keyboard, UIManager, Platform)
+│   └── mockScroll.ts      # ScrollView responder mocks
+├── hooks/
+│   ├── useKeyboard.test.ts                  # 16 tests
+│   └── useKeyboardAwareScroll.test.ts       # 24 tests
+├── components/
+│   ├── KeyboardAwareScrollView.test.tsx      # 12 tests
+│   ├── KeyboardAwareFlatList.test.tsx        # 5 tests
+│   └── KeyboardAwareSectionList.test.tsx     # 5 tests
+└── utils/
+    ├── platform.test.ts                      # 7 tests
+    └── measureElement.test.ts                # 4 tests
+```
+
+### Key test scenarios covered
+
+- **Platform detection**: iOS/Android/unknown platform handling
+- **Keyboard events**: `keyboardWillShow/Hide` (iOS), `keyboardDidShow/Hide` (Android)
+- **Automatic scroll**: scroll to focused input when keyboard appears
+- **Scroll reset**: reset position when keyboard hides with `enableResetScrollToCoords`
+- **Ref forwarding**: `forwardRef` + `useImperativeHandle` API
+- **Android-specific**: `enableOnAndroid`, extra padding, `scrollForExtraHeightOnAndroid`
+- **Edge cases**: null refs, unmounted components, missing scroll responders
+- **Component props**: `contentInset`, `keyboardDismissMode`, `onScroll` merge
+
+## Contributing
+
+1. Fork the repo
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
 ## License
 
 MIT
