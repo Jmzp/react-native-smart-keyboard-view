@@ -21,10 +21,12 @@ export function useKeyboard(options?: {
   })
 
   const optionsRef = useRef(options)
-  optionsRef.current = options
+  useEffect(() => {
+    optionsRef.current = options
+  })
 
   const extractFrame = useCallback(
-    (event: any): KeyboardFrame => ({
+    (event: { endCoordinates: { height: number; screenY: number }; duration: number; easing: string }): KeyboardFrame => ({
       height: event.endCoordinates.height,
       screenY: event.endCoordinates.screenY,
       duration: event.duration,
@@ -34,7 +36,7 @@ export function useKeyboard(options?: {
   )
 
   useEffect(() => {
-    const listeners: Array<any> = []
+    const listeners: Array<{ remove: () => void }> = []
 
     if (Platform.OS === 'ios') {
       listeners.push(

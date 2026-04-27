@@ -7,9 +7,9 @@ import type {
   ScrollEvent,
 } from '../types'
 
-export const KeyboardAwareSectionList = forwardRef<
+const KeyboardAwareSectionListInner = forwardRef<
   KeyboardAwareScrollRef,
-  KeyboardAwareSectionListProps<any>
+  KeyboardAwareSectionListProps<unknown>
 >((props, ref) => {
   const {
     enableAutomaticScroll,
@@ -64,6 +64,7 @@ export const KeyboardAwareSectionList = forwardRef<
         ;(propsOnScroll as (event: ScrollEvent) => void)(event)
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [propsOnScroll, keyboardAware.handleScroll],
   )
 
@@ -93,6 +94,15 @@ export const KeyboardAwareSectionList = forwardRef<
       contentContainerStyle={androidContentContainerStyle ?? contentContainerStyle}
     />
   )
+})
+
+KeyboardAwareSectionListInner.displayName = 'KeyboardAwareSectionList'
+
+export const KeyboardAwareSectionList = forwardRef<
+  KeyboardAwareScrollRef,
+  KeyboardAwareSectionListProps<unknown>
+>(function KeyboardAwareSectionList(props, ref) {
+  return <KeyboardAwareSectionListInner {...props} ref={ref} />
 }) as <ItemT>(
   props: KeyboardAwareSectionListProps<ItemT> & { ref?: React.Ref<KeyboardAwareScrollRef> },
 ) => React.ReactElement | null

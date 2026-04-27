@@ -65,6 +65,7 @@ export const KeyboardAwareScrollView = forwardRef<
         ;(propsOnScroll as (event: ScrollEvent) => void)(event)
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [propsOnScroll, keyboardAware.handleScroll],
   )
 

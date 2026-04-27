@@ -42,6 +42,7 @@ const DEFAULT_OPTIONS: Required<
 export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const scrollViewRef = useRef<any>(null)
   const position = useRef<ContentOffset>({ x: 0, y: 0 })
   const defaultResetScrollToCoords = useRef<ContentOffset | null>(null)
@@ -129,7 +130,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
 
   const scrollIntoView = useCallback(
     async (
-      element: React.Component<any> | null,
+      element: React.Component<Record<string, unknown>> | null,
       intoViewOptions?: ScrollIntoViewOptions,
     ) => {
       if (!scrollViewRef.current || !element) return
@@ -155,6 +156,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     position.current = event.nativeEvent.contentOffset
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRef = useCallback((ref: any) => {
     scrollViewRef.current = ref
   }, [])
@@ -244,6 +246,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
         defaultResetScrollToCoords.current = { ...position.current }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyboard.isVisible, keyboard.height])
 
   useEffect(() => {
@@ -264,6 +267,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
       )
       defaultResetScrollToCoords.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyboard.isVisible])
 
   const keyboardSpace = keyboard.isVisible
@@ -277,7 +281,11 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     getScrollResponder,
     scrollToPosition,
     scrollToEnd,
-    scrollToFocusedInput: (ref: React.RefObject<any>, scrollOpts?: ScrollToInputOptions) => {
+    scrollToFocusedInput: (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref: React.RefObject<any>,
+      scrollOpts?: ScrollToInputOptions,
+    ) => {
       const node = ref.current ? findNodeHandle(ref.current) : null
       if (node) scrollToFocusedInput(node, scrollOpts)
     },

@@ -67,11 +67,12 @@ export interface KeyboardAwareScrollRef {
   scrollToPosition: (x: number, y: number, animated?: boolean) => void
   scrollToEnd: (animated?: boolean) => void
   scrollToFocusedInput: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ref: React.RefObject<any>,
     options?: ScrollToInputOptions,
   ) => void
   scrollIntoView: (
-    element: React.Component<any> | null,
+    element: React.Component<Record<string, unknown>> | null,
     options?: ScrollIntoViewOptions,
   ) => void
 }
