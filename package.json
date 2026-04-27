@@ -1,6 +1,6 @@
 {
   "name": "react-native-smart-keyboard-view",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A modern, TypeScript-native keyboard-aware scroll view for React Native with hooks support",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
