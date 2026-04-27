@@ -39,6 +39,27 @@ const DEFAULT_OPTIONS: Required<
   enableOnAndroid: true,
 }
 
+/**
+ * Core hook that provides keyboard-aware scrolling behavior.
+ *
+ * Automatically scrolls the focused `TextInput` into view when the keyboard
+ * appears and resets the scroll position when it hides. Also exposes
+ * imperative methods via its return value for manual scroll control.
+ *
+ * @param options - Configuration options (all optional, sensible defaults).
+ * @returns An object with ref handlers, scroll methods, and the current `keyboardSpace`.
+ *
+ * @example
+ * ```tsx
+ * const { handleRef, handleScroll, keyboardSpace, scrollToPosition } = useKeyboardAwareScroll()
+ *
+ * return (
+ *   <ScrollView ref={handleRef} onScroll={handleScroll}>
+ *     {children}
+ *   </ScrollView>
+ * )
+ * ```
+ */
 export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options }
 
@@ -65,6 +86,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     }
   }, [])
 
+  /** Returns the underlying scroll responder from the attached ScrollView. */
   const getScrollResponder = useCallback(() => {
     if (!scrollViewRef.current) return null
     if (typeof scrollViewRef.current.getScrollResponder === 'function') {
@@ -73,6 +95,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     return scrollViewRef.current
   }, [])
 
+  /** Scrolls to the given x, y coordinates. */
   const scrollToPosition = useCallback(
     (x: number, y: number, animated = true) => {
       const responder = getScrollResponder()
@@ -85,6 +108,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     [getScrollResponder],
   )
 
+  /** Scrolls to the end of the scrollable content. */
   const scrollToEnd = useCallback(
     (animated = true) => {
       const responder = getScrollResponder()
@@ -97,6 +121,10 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     [getScrollResponder],
   )
 
+  /**
+   * Scrolls to bring the native node corresponding to a focused input into view.
+   * Uses the native `scrollResponderScrollNativeHandleToKeyboard` method.
+   */
   const scrollToFocusedInput = useCallback(
     (nodeHandle: number, scrollOptions?: ScrollToInputOptions) => {
       const extraHeight = scrollOptions?.extraHeight ?? opts.extraHeight
@@ -128,6 +156,10 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     [getScrollResponder, opts.extraHeight, opts.extraScrollHeight, opts.keyboardOpeningTime],
   )
 
+  /**
+   * Measures both the scroll container and the target element, then scrolls
+   * so the element becomes visible. A custom `getScrollPosition` can be provided.
+   */
   const scrollIntoView = useCallback(
     async (
       element: React.Component<Record<string, unknown>> | null,
@@ -152,15 +184,18 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     [scrollToPosition],
   )
 
+  /** Tracks the current scroll offset from scroll events. */
   const handleScroll = useCallback((event: ScrollEvent) => {
     position.current = event.nativeEvent.contentOffset
   }, [])
 
+  /** Callback ref that captures the ScrollView instance. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRef = useCallback((ref: any) => {
     scrollViewRef.current = ref
   }, [])
 
+  /** Returns the native node handle of the currently focused TextInput. */
   const getCurrentlyFocusedInput = useCallback((): number | null => {
     const focusedInput = TextInput.State.currentlyFocusedInput
       ? findNodeHandle(TextInput.State.currentlyFocusedInput())
@@ -175,6 +210,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     return focusedField
   }, [])
 
+  /** Scrolls down by `extraHeight` — used on Android to reveal inputs behind the keyboard. */
   const scrollForExtraHeightOnAndroid = useCallback(
     (extraHeight: number) => {
       scrollToPosition(0, position.current.y + extraHeight, true)
@@ -182,12 +218,14 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     [scrollToPosition],
   )
 
+  /** Re-triggers the automatic scroll to the currently focused input. */
   const update = useCallback(() => {
     const currentlyFocused = getCurrentlyFocusedInput()
     if (!currentlyFocused) return
     scrollToFocusedInput(currentlyFocused)
   }, [getCurrentlyFocusedInput, scrollToFocusedInput])
 
+  // Automatically scroll when the keyboard appears and a child input is focused.
   useEffect(() => {
     if (!opts.enableAutomaticScroll) return
     if (isAndroid() && !opts.enableOnAndroid) return
@@ -249,6 +287,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyboard.isVisible, keyboard.height])
 
+  // Reset scroll position when the keyboard hides.
   useEffect(() => {
     if (keyboard.isVisible || !isMounted.current) return
 
@@ -294,6 +333,7 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
   }
 }
 
+/** Default scroll position calculator for `scrollIntoView`. */
 function defaultGetScrollPosition(
   parentLayout: ElementLayout,
   childLayout: ElementLayout,

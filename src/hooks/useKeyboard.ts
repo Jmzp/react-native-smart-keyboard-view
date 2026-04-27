@@ -8,6 +8,20 @@ interface KeyboardState {
   frame: KeyboardFrame | null
 }
 
+/**
+ * Hook that tracks keyboard visibility and dimensions.
+ *
+ * On iOS it listens to `willShow`/`willHide` for immediate feedback.
+ * On Android it falls back to `didShow`/`didHide` since `will` events are not available.
+ *
+ * @param options - Optional callbacks for each keyboard lifecycle event.
+ * @returns Current keyboard state: `{ isVisible, height, frame }`.
+ *
+ * @example
+ * ```tsx
+ * const { isVisible, height } = useKeyboard()
+ * ```
+ */
 export function useKeyboard(options?: {
   onKeyboardWillShow?: (frame: KeyboardFrame) => void
   onKeyboardWillHide?: (frame: KeyboardFrame) => void

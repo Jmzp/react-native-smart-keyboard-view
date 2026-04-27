@@ -7,6 +7,13 @@ import type {
   ScrollEvent,
 } from '../types'
 
+/**
+ * A `FlatList` wrapper that automatically adjusts when the keyboard appears.
+ *
+ * All standard `FlatListProps` are forwarded. The component uses an inner
+ * `forwardRef` to preserve `displayName` while the exported wrapper keeps
+ * the generic `ItemT` type parameter.
+ */
 const KeyboardAwareFlatListInner = forwardRef<
   KeyboardAwareScrollRef,
   KeyboardAwareFlatListProps<unknown>

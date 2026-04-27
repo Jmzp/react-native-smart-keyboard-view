@@ -7,6 +7,13 @@ import type {
   ScrollEvent,
 } from '../types'
 
+/**
+ * A `SectionList` wrapper that automatically adjusts when the keyboard appears.
+ *
+ * All standard `SectionListProps` are forwarded. The component uses an inner
+ * `forwardRef` to preserve `displayName` while the exported wrapper keeps
+ * the generic `ItemT` type parameter.
+ */
 const KeyboardAwareSectionListInner = forwardRef<
   KeyboardAwareScrollRef,
   KeyboardAwareSectionListProps<unknown>

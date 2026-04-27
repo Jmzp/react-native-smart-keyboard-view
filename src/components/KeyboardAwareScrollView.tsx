@@ -7,6 +7,14 @@ import type {
   ScrollEvent,
 } from '../types'
 
+/**
+ * A `ScrollView` wrapper that automatically adjusts when the keyboard appears.
+ *
+ * Drops-in as a replacement for the standard React Native `ScrollView` —
+ * all regular `ScrollViewProps` are forwarded. On iOS the content inset is
+ * adjusted; on Android extra bottom padding is added when `enableOnAndroid`
+ * is `true` (the default).
+ */
 export const KeyboardAwareScrollView = forwardRef<
   KeyboardAwareScrollRef,
   KeyboardAwareScrollViewProps
