@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/platform-iOS%20%7C%20Android-667eea?style=for-the-badge&labelColor=302b63" alt="platform" />
   <img src="https://img.shields.io/badge/TypeScript-100%25-667eea?style=for-the-badge&labelColor=302b63" alt="typescript" />
   <img src="https://img.shields.io/badge/RN-0.72+-667eea?style=for-the-badge&labelColor=302b63" alt="react-native" />
-  <img src="https://img.shields.io/github/license/Jmzp/react-native-smart-keyboard-view?style=for-the-badge&color=667eea&labelColor=302b63" alt="license" />
+  <img src="https://img.shields.io/npm/l/react-native-smart-keyboard-view?style=for-the-badge&color=667eea&labelColor=302b63" alt="license" />
   <img src="https://img.shields.io/badge/tests-86%20passed-667eea?style=for-the-badge&labelColor=302b63" alt="tests" />
   <img src="https://img.shields.io/badge/coverage-90%25-667eea?style=for-the-badge&labelColor=302b63" alt="coverage" />
 </p>
