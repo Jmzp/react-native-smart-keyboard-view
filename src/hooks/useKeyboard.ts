@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Keyboard, Platform } from 'react-native'
+import { Keyboard, Platform, Dimensions } from 'react-native'
 import type { KeyboardFrame } from '../types'
 
 interface KeyboardState {
@@ -77,7 +77,8 @@ export function useKeyboard(options?: {
       listeners.push(
         Keyboard.addListener('keyboardDidShow', (e) => {
           const frame = extractFrame(e)
-          setState({ isVisible: true, height: frame.height, frame })
+          const actualHeight = frame.height > 0 ? frame.height : Dimensions.get('window').height - frame.screenY
+          setState({ isVisible: true, height: actualHeight, frame: { ...frame, height: actualHeight } })
           optionsRef.current?.onKeyboardDidShow?.(frame)
         }),
         Keyboard.addListener('keyboardDidHide', (e) => {

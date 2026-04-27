@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react'
-import { TextInput, findNodeHandle, UIManager } from 'react-native'
+import { TextInput, findNodeHandle, UIManager, Platform } from 'react-native'
 import type {
   KeyboardAwareOptions,
   ContentOffset,
@@ -11,12 +11,7 @@ import type {
 } from '../types'
 import { useKeyboard } from './useKeyboard'
 import { measureElement } from '../utils/measureElement'
-import {
-  isIOS,
-  isAndroid,
-  DEFAULT_EXTRA_HEIGHT,
-  DEFAULT_KEYBOARD_OPENING_TIME,
-} from '../utils/platform'
+import { DEFAULT_EXTRA_HEIGHT, DEFAULT_KEYBOARD_OPENING_TIME } from '../utils/platform'
 
 const DEFAULT_OPTIONS: Required<
   Pick<
@@ -61,7 +56,21 @@ const DEFAULT_OPTIONS: Required<
  * ```
  */
 export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const filtered = Object.fromEntries(
+    Object.entries(options).filter(([, v]) => v !== undefined),
+  ) as Partial<KeyboardAwareOptions>
+  const opts = { ...DEFAULT_OPTIONS, ...filtered } as Required<
+    Pick<
+      KeyboardAwareOptions,
+      | 'enableAutomaticScroll'
+      | 'extraScrollHeight'
+      | 'extraHeight'
+      | 'enableResetScrollToCoords'
+      | 'keyboardOpeningTime'
+      | 'viewIsInsideTabBar'
+      | 'enableOnAndroid'
+    >
+  > & Omit<KeyboardAwareOptions, keyof typeof DEFAULT_OPTIONS>
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const scrollViewRef = useRef<any>(null)
@@ -122,8 +131,8 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
   )
 
   /**
-   * Scrolls to bring the native node corresponding to a focused input into view.
-   * Uses the native `scrollResponderScrollNativeHandleToKeyboard` method.
+   * Measures the focused input and scrolls it above the keyboard.
+   * Works without relying on `scrollResponderScrollNativeHandleToKeyboard`.
    */
   const scrollToFocusedInput = useCallback(
     (nodeHandle: number, scrollOptions?: ScrollToInputOptions) => {
@@ -138,22 +147,24 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
       scrollAnimationTimeout.current = setTimeout(() => {
         if (!isMounted.current) return
 
-        const responder = getScrollResponder()
-        if (
-          !responder ||
-          typeof responder.scrollResponderScrollNativeHandleToKeyboard !== 'function'
-        ) {
-          return
-        }
-
-        responder.scrollResponderScrollNativeHandleToKeyboard(
+        UIManager.measureInWindow(
           nodeHandle,
-          extraHeight + opts.extraScrollHeight,
-          true,
+          (_x: number, y: number, _width: number, height: number) => {
+            if (!isMounted.current || !keyboard.frame) return
+
+            const textInputBottom = y + height
+            const keyboardY = keyboard.frame.screenY
+            const totalExtra = extraHeight + opts.extraScrollHeight
+
+            if (textInputBottom > keyboardY - totalExtra) {
+              const scrollIncrease = textInputBottom - keyboardY + totalExtra
+              scrollToPosition(0, position.current.y + scrollIncrease, true)
+            }
+          },
         )
       }, keyboardOpeningTime)
     },
-    [getScrollResponder, opts.extraHeight, opts.extraScrollHeight, opts.keyboardOpeningTime],
+    [getScrollResponder, scrollToPosition, opts.extraScrollHeight, keyboard.frame],
   )
 
   /**
@@ -197,26 +208,23 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
 
   /** Returns the native node handle of the currently focused TextInput. */
   const getCurrentlyFocusedInput = useCallback((): number | null => {
-    const focusedInput = TextInput.State.currentlyFocusedInput
-      ? findNodeHandle(TextInput.State.currentlyFocusedInput())
-      : null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentInput = (TextInput.State as any).currentlyFocusedInput
+    if (currentInput) {
+      const ref = typeof currentInput === 'function' ? currentInput() : currentInput
+      const handle = ref ? findNodeHandle(ref) : null
+      if (handle) return handle
+    }
 
-    if (focusedInput) return focusedInput
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentField = (TextInput.State as any).currentlyFocusedField
+    if (currentField) {
+      const field = typeof currentField === 'function' ? currentField() : currentField
+      if (typeof field === 'number') return field
+    }
 
-    const focusedField = TextInput.State.currentlyFocusedField
-      ? TextInput.State.currentlyFocusedField()
-      : null
-
-    return focusedField
+    return null
   }, [])
-
-  /** Scrolls down by `extraHeight` — used on Android to reveal inputs behind the keyboard. */
-  const scrollForExtraHeightOnAndroid = useCallback(
-    (extraHeight: number) => {
-      scrollToPosition(0, position.current.y + extraHeight, true)
-    },
-    [scrollToPosition],
-  )
 
   /** Re-triggers the automatic scroll to the currently focused input. */
   const update = useCallback(() => {
@@ -228,54 +236,40 @@ export function useKeyboardAwareScroll(options: KeyboardAwareOptions = {}) {
   // Automatically scroll when the keyboard appears and a child input is focused.
   useEffect(() => {
     if (!opts.enableAutomaticScroll) return
-    if (isAndroid() && !opts.enableOnAndroid) return
-    if (!keyboard.isVisible || !keyboard.frame) return
+    if (Platform.OS === 'android' && !opts.enableOnAndroid) return
+    if (!keyboard.isVisible) return
+    if (!keyboard.frame) return
 
-    const currentlyFocused = getCurrentlyFocusedInput()
-    const responder = getScrollResponder()
-    if (!currentlyFocused || !responder) return
+    let currentlyFocused: number | null = null
+    try {
+      currentlyFocused = getCurrentlyFocusedInput()
+      if (!currentlyFocused) return
+    } catch {
+      return
+    }
 
-    const innerViewNode =
-      typeof responder.getInnerViewNode === 'function'
-        ? responder.getInnerViewNode()
-        : null
-
-    if (!innerViewNode) return
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const uiManager = UIManager as any
-    if (typeof uiManager.viewIsDescendantOf !== 'function') return
-
-    uiManager.viewIsDescendantOf(
+    UIManager.measureInWindow(
       currentlyFocused,
-      innerViewNode,
-      (isAncestor: boolean) => {
-        if (!isAncestor || !isMounted.current) return
+      (_x: number, y: number, _width: number, height: number) => {
+        if (!isMounted.current || !keyboard.frame) return
 
-        UIManager.measureInWindow(
-          currentlyFocused,
-          (_x: number, y: number, _width: number, height: number) => {
-            if (!isMounted.current) return
+        const textInputBottom = y + height
+        const keyboardY = keyboard.frame.screenY
+        const totalExtra = opts.extraScrollHeight + opts.extraHeight
 
-            const textInputBottom = y + height
-            const keyboardY = keyboard.frame!.screenY
-            const totalExtra = opts.extraScrollHeight + opts.extraHeight
-
-            if (isIOS()) {
-              if (textInputBottom > keyboardY - totalExtra) {
-                scrollToFocusedInput(currentlyFocused)
-              }
-            } else {
-              if (textInputBottom > keyboardY) {
-                scrollForExtraHeightOnAndroid(totalExtra)
-              } else if (textInputBottom > keyboardY - totalExtra) {
-                scrollForExtraHeightOnAndroid(
-                  totalExtra - (keyboardY - textInputBottom),
-                )
-              }
-            }
-          },
-        )
+        if (Platform.OS === 'ios') {
+          if (textInputBottom > keyboardY - totalExtra) {
+            scrollToFocusedInput(currentlyFocused)
+          }
+        } else {
+          if (textInputBottom > keyboardY) {
+            const scrollIncrease = textInputBottom - keyboardY + totalExtra
+            scrollToPosition(0, position.current.y + scrollIncrease, true)
+          } else if (textInputBottom > keyboardY - totalExtra) {
+            const scrollIncrease = totalExtra - (keyboardY - textInputBottom)
+            scrollToPosition(0, position.current.y + scrollIncrease, true)
+          }
+        }
       },
     )
 

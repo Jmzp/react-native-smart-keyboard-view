@@ -59,6 +59,7 @@ const KeyboardAwareSectionListInner = forwardRef<
       scrollToEnd: keyboardAware.scrollToEnd,
       scrollToFocusedInput: keyboardAware.scrollToFocusedInput,
       scrollIntoView: keyboardAware.scrollIntoView,
+      update: keyboardAware.update,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [keyboardAware.getScrollResponder, keyboardAware.scrollToPosition],

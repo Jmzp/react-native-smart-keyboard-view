@@ -5,3 +5,13 @@ lib/
 coverage/
 .idea/
 .vscode/
+package-lock.json
+
+example/node_modules/
+example/android/build/
+example/android/app/build/
+example/android/.gradle/
+example/android/local.properties
+example/ios/build/
+example/ios/Pods/
+example/.bundle/

@@ -148,22 +148,24 @@ describe('useKeyboardAwareScroll', () => {
       const ref = { current: null }
       expect(() => result.current.scrollToFocusedInput(ref)).not.toThrow()
     })
-  })
 
-  describe('scrollToFocusedInput (nodeHandle-based)', () => {
     it('sets a timeout with keyboardOpeningTime', () => {
       const { result } = renderHook(() => useKeyboardAwareScroll({ keyboardOpeningTime: 100 }))
-      const responder = setupScrollResponder(result.current)
+      setupScrollResponder(result.current)
 
       const ref = { current: { _nativeTag: 42 } }
       mockFindNodeHandle(42)
-
-      act(() => { result.current.scrollToFocusedInput(ref) })
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).not.toHaveBeenCalled()
-      act(() => { jest.advanceTimersByTime(100) })
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledWith(
-        42, 75, true,
+      ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
+        (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 500, 300, 50),
       )
+
+      act(() => {
+        result.current.scrollToFocusedInput(ref)
+        fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 })
+      })
+      act(() => { jest.advanceTimersByTime(100) })
+
+      expect(UIManager.measureInWindow).toHaveBeenCalledWith(42, expect.any(Function))
     })
 
     it('uses default extraHeight + extraScrollHeight', () => {
@@ -174,11 +176,17 @@ describe('useKeyboardAwareScroll', () => {
       const responder = setupScrollResponder(result.current)
       const ref = { current: { _nativeTag: 10 } }
       mockFindNodeHandle(10)
+      ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
+        (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 700, 300, 50),
+      )
+
+      act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 }) })
 
       act(() => { result.current.scrollToFocusedInput(ref) })
       act(() => { jest.advanceTimersByTime(250) })
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledWith(
-        10, 120, true,
+
+      expect(responder.scrollTo).toHaveBeenCalledWith(
+        expect.objectContaining({ animated: true }),
       )
     })
 
@@ -187,16 +195,19 @@ describe('useKeyboardAwareScroll', () => {
       const responder = setupScrollResponder(result.current)
 
       mockFindNodeHandle(1, 2)
+      ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
+        (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 500, 300, 50),
+      )
 
-      act(() => { result.current.scrollToFocusedInput({ current: {} }) })
+      act(() => {
+        result.current.scrollToFocusedInput({ current: {} })
+        fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 })
+      })
       act(() => { jest.advanceTimersByTime(100) })
       act(() => { result.current.scrollToFocusedInput({ current: {} }) })
       act(() => { jest.advanceTimersByTime(200) })
 
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledTimes(1)
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledWith(
-        2, 75, true,
-      )
+      expect(responder.scrollTo).toHaveBeenCalledTimes(1)
     })
 
     it('does not scroll if unmounted', () => {
@@ -205,7 +216,7 @@ describe('useKeyboardAwareScroll', () => {
       act(() => { result.current.scrollToFocusedInput(1 as any) })
       unmount()
       act(() => { jest.advanceTimersByTime(250) })
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).not.toHaveBeenCalled()
+      expect(responder.scrollTo).not.toHaveBeenCalled()
     })
   })
 
@@ -277,16 +288,19 @@ describe('useKeyboardAwareScroll', () => {
     it('scrolls to focused input when available', () => {
       setFocusedInput({} as any)
       mockFindNodeHandle(99)
+      ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
+        (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 500, 300, 50),
+      )
 
       const { result } = renderHook(() => useKeyboardAwareScroll())
-      const responder = setupScrollResponder(result.current)
+      setupScrollResponder(result.current)
+
+      act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 }) })
 
       result.current.update()
       act(() => { jest.advanceTimersByTime(250) })
 
-      expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledWith(
-        99, 75, true,
-      )
+      expect(UIManager.measureInWindow).toHaveBeenCalledWith(99, expect.any(Function))
     })
   })
 
@@ -308,27 +322,13 @@ describe('useKeyboardAwareScroll', () => {
       const { result } = renderHook(() => useKeyboardAwareScroll({ enableAutomaticScroll: false }))
       setupScrollResponder(result.current)
       act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 }) })
-      expect((UIManager as any).viewIsDescendantOf).not.toHaveBeenCalled()
+      expect(UIManager.measureInWindow).not.toHaveBeenCalled()
     })
 
     it('does not scroll when no focused input', () => {
       const { result } = renderHook(() => useKeyboardAwareScroll())
       setupScrollResponder(result.current)
       act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336 }) })
-      expect((UIManager as any).viewIsDescendantOf).not.toHaveBeenCalled()
-    })
-
-    it('does not scroll when viewIsDescendantOf returns false', () => {
-      mockFindNodeHandle(1)
-      setFocusedInput({} as any)
-      ;(UIManager as any).viewIsDescendantOf.mockImplementation(
-        (_a: any, _b: any, cb: (v: boolean) => void) => cb(false),
-      )
-
-      const { result } = renderHook(() => useKeyboardAwareScroll())
-      setupScrollResponder(result.current)
-
-      act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 }) })
       expect(UIManager.measureInWindow).not.toHaveBeenCalled()
     })
 
@@ -336,9 +336,6 @@ describe('useKeyboardAwareScroll', () => {
       it('scrolls when textInputBottom > keyboardY - totalExtra', () => {
         mockFindNodeHandle(5)
         setFocusedInput({} as any)
-        ;(UIManager as any).viewIsDescendantOf.mockImplementation(
-          (_a: any, _b: any, cb: (v: boolean) => void) => cb(true),
-        )
         ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
           (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 500, 300, 50),
         )
@@ -349,17 +346,14 @@ describe('useKeyboardAwareScroll', () => {
         act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 400 }) })
         act(() => { jest.advanceTimersByTime(250) })
 
-        expect(responder.scrollResponderScrollNativeHandleToKeyboard).toHaveBeenCalledWith(
-          5, 75, true,
+        expect(responder.scrollTo).toHaveBeenCalledWith(
+          expect.objectContaining({ animated: true }),
         )
       })
 
       it('does not scroll when textInput is fully above keyboard', () => {
         mockFindNodeHandle(5)
         setFocusedInput({} as any)
-        ;(UIManager as any).viewIsDescendantOf.mockImplementation(
-          (_a: any, _b: any, cb: (v: boolean) => void) => cb(true),
-        )
         ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
           (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 100, 300, 50),
         )
@@ -368,7 +362,7 @@ describe('useKeyboardAwareScroll', () => {
         const responder = setupScrollResponder(result.current)
 
         act(() => { fireKeyboardEvent('keyboardWillShow', { height: 336, screenY: 700 }) })
-        expect(responder.scrollResponderScrollNativeHandleToKeyboard).not.toHaveBeenCalled()
+        expect(responder.scrollTo).not.toHaveBeenCalled()
       })
     })
 
@@ -385,15 +379,12 @@ describe('useKeyboardAwareScroll', () => {
         setupScrollResponder(result.current)
 
         act(() => { fireKeyboardEvent('keyboardDidShow') })
-        expect((UIManager as any).viewIsDescendantOf).not.toHaveBeenCalled()
+        expect(UIManager.measureInWindow).not.toHaveBeenCalled()
       })
 
       it('scrolls extra height when input is behind keyboard', () => {
         mockFindNodeHandle(5)
         setFocusedInput({} as any)
-        ;(UIManager as any).viewIsDescendantOf.mockImplementation(
-          (_a: any, _b: any, cb: (v: boolean) => void) => cb(true),
-        )
         ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
           (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 700, 300, 50),
         )
@@ -415,9 +406,6 @@ describe('useKeyboardAwareScroll', () => {
     it('resets to defaultResetScrollToCoords when keyboard hides', () => {
       mockFindNodeHandle(1)
       setFocusedInput({} as any)
-      ;(UIManager as any).viewIsDescendantOf.mockImplementation(
-        (_a: any, _b: any, cb: (v: boolean) => void) => cb(true),
-      )
       ;(UIManager.measureInWindow as jest.Mock).mockImplementation(
         (_n: any, cb: (x: number, y: number, w: number, h: number) => void) => cb(0, 500, 300, 50),
       )

@@ -101,6 +101,8 @@ export interface KeyboardAwareScrollRef {
     element: React.Component<Record<string, unknown>> | null,
     options?: ScrollIntoViewOptions,
   ) => void
+  /** Re-triggers scroll to the currently focused input. */
+  update: () => void
 }
 
 export type KeyboardAwareScrollViewProps = ScrollViewProps & KeyboardAwareOptions
