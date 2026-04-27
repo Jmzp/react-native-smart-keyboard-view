@@ -158,32 +158,33 @@ yarn test --coverage
 
 | Module | Statements | Branches | Functions | Lines |
 |--------|-----------|----------|-----------|-------|
-| Overall | ~65% | ~55% | ~64% | ~65% |
+| **Overall** | **89.5%** | **75.9%** | **87%** | **90.3%** |
 | `platform.ts` | 100% | 100% | 100% | 100% |
-| `KeyboardAwareScrollView` | ~77% | ~79% | ~67% | ~77% |
-| `KeyboardAwareFlatList` | ~75% | ~43% | ~67% | ~75% |
-| `KeyboardAwareSectionList` | ~75% | ~43% | ~67% | ~75% |
-| `useKeyboardAwareScroll` | ~65% | ~54% | ~80% | ~67% |
-| `useKeyboard` | ~43% | 100% | ~36% | ~41% |
-| `measureElement` | ~50% | ~75% | ~33% | ~50% |
+| `useKeyboard` | 100% | 100% | 100% | 100% |
+| `useKeyboardAwareScroll` | 94.2% | 84.8% | 100% | 97.1% |
+| `measureElement` | 100% | 100% | 100% | 100% |
+| `KeyboardAwareScrollView` | 76.9% | 78.6% | 66.7% | 76.9% |
+| `KeyboardAwareFlatList` | 75% | 42.9% | 66.7% | 75% |
+| `KeyboardAwareSectionList` | 75% | 42.9% | 66.7% | 75% |
 
 ### Test structure
 
 ```
 __tests__/
 ├── helpers/
-│   ├── mockRN.ts          # React Native module mocks (Keyboard, UIManager, Platform)
+│   ├── mockRN.ts          # React Native mock helpers (jest.spyOn based)
 │   └── mockScroll.ts      # ScrollView responder mocks
 ├── hooks/
-│   ├── useKeyboard.test.ts                  # 16 tests
-│   └── useKeyboardAwareScroll.test.ts       # 24 tests
+│   ├── useKeyboard.test.ts                  # 18 tests
+│   └── useKeyboardAwareScroll.test.ts       # 37 tests
 ├── components/
-│   ├── KeyboardAwareScrollView.test.tsx      # 12 tests
-│   ├── KeyboardAwareFlatList.test.tsx        # 5 tests
-│   └── KeyboardAwareSectionList.test.tsx     # 5 tests
-└── utils/
-    ├── platform.test.ts                      # 7 tests
-    └── measureElement.test.ts                # 4 tests
+│   ├── KeyboardAwareScrollView.test.tsx      # 7 tests
+│   ├── KeyboardAwareFlatList.test.tsx        # 4 tests
+│   └── KeyboardAwareSectionList.test.tsx     # 4 tests
+├── utils/
+│   ├── platform.test.ts                      # 9 tests
+│   └── measureElement.test.ts                # 4 tests
+└── index.test.ts                             # 5 tests
 ```
 
 ### Key test scenarios covered

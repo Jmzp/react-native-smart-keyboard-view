@@ -1,10 +1,15 @@
 import { renderHook, act } from '@testing-library/react-native'
 import { useKeyboard } from '../../src/hooks/useKeyboard'
-import { fireKeyboardEvent, resetMocks, mockKeyboardListeners, setPlatform } from '../helpers/mockRN'
+import { setupKeyboardMock, fireKeyboardEvent, mockKeyboardListeners, setPlatform } from '../helpers/mockRN'
 
 describe('useKeyboard', () => {
   beforeEach(() => {
-    resetMocks()
+    setupKeyboardMock()
+    setPlatform('ios')
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   describe('initial state', () => {
@@ -139,7 +144,7 @@ describe('useKeyboard', () => {
 
     it('does not respond to keyboardWillHide events', () => {
       const onWillHide = jest.fn()
-      const { result } = renderHook(() => useKeyboard({ onKeyboardWillHide: onWillHide }))
+      renderHook(() => useKeyboard({ onKeyboardWillHide: onWillHide }))
       act(() => { fireKeyboardEvent('keyboardWillHide') })
       expect(onWillHide).not.toHaveBeenCalled()
     })
@@ -152,7 +157,6 @@ describe('useKeyboard', () => {
       const listenerCount = Object.keys(mockKeyboardListeners).length
       expect(listenerCount).toBeGreaterThan(0)
       unmount()
-      // After unmount, new subscriptions should not accumulate from the same hook
     })
   })
 

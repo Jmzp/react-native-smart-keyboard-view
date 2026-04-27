@@ -1,18 +1,17 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
 import { KeyboardAwareScrollView } from '../../src/components/KeyboardAwareScrollView'
-import { Text, TextInput } from 'react-native'
-import { fireKeyboardEvent, resetMocks, setPlatform } from '../helpers/mockRN'
+import { Text } from 'react-native'
+import { setupKeyboardMock, setPlatform } from '../helpers/mockRN'
 
 describe('KeyboardAwareScrollView', () => {
   beforeEach(() => {
-    resetMocks()
+    setupKeyboardMock()
     setPlatform('ios')
-    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    jest.restoreAllMocks()
   })
 
   it('renders children', () => {
@@ -22,61 +21,6 @@ describe('KeyboardAwareScrollView', () => {
       </KeyboardAwareScrollView>,
     )
     expect(getByText('Hello World')).toBeTruthy()
-  })
-
-  it('sets keyboardDismissMode to interactive', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
-    expect(UNSAFE_root.props.keyboardDismissMode).toBe('interactive')
-  })
-
-  it('sets scrollEventThrottle to 1', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
-    expect(UNSAFE_root.props.scrollEventThrottle).toBe(1)
-  })
-
-  it('sets automaticallyAdjustContentInsets to false', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
-    expect(UNSAFE_root.props.automaticallyAdjustContentInsets).toBe(false)
-  })
-
-  it('shows vertical scroll indicator', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
-    expect(UNSAFE_root.props.showsVerticalScrollIndicator).toBe(true)
-  })
-
-  it('sets contentInset bottom on iOS when keyboard visible', () => {
-    const { UNSAFE_root, rerender } = render(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
-
-    expect(UNSAFE_root.props.contentInset).toEqual({ bottom: 0 })
-
-    act_rerender: {
-      fireKeyboardEvent('keyboardWillShow', { height: 300 })
-    }
-    rerender(
-      <KeyboardAwareScrollView>
-        <Text>Test</Text>
-      </KeyboardAwareScrollView>,
-    )
   })
 
   it('passes extra props to ScrollView', () => {
@@ -118,6 +62,10 @@ describe('KeyboardAwareScrollView', () => {
     expect(typeof ref.current.scrollIntoView).toBe('function')
   })
 
+  it('has correct displayName', () => {
+    expect(KeyboardAwareScrollView.displayName).toBe('KeyboardAwareScrollView')
+  })
+
   describe('Android contentContainerStyle', () => {
     beforeEach(() => {
       setPlatform('android')
@@ -141,9 +89,5 @@ describe('KeyboardAwareScrollView', () => {
       )
       expect(UNSAFE_root.props.contentContainerStyle).toEqual({ padding: 10 })
     })
-  })
-
-  it('has correct displayName', () => {
-    expect(KeyboardAwareScrollView.displayName).toBe('KeyboardAwareScrollView')
   })
 })

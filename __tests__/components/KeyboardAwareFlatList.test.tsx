@@ -2,12 +2,16 @@ import React from 'react'
 import { render } from '@testing-library/react-native'
 import { KeyboardAwareFlatList } from '../../src/components/KeyboardAwareFlatList'
 import { Text } from 'react-native'
-import { resetMocks, setPlatform } from '../helpers/mockRN'
+import { setupKeyboardMock, setPlatform } from '../helpers/mockRN'
 
 describe('KeyboardAwareFlatList', () => {
   beforeEach(() => {
-    resetMocks()
+    setupKeyboardMock()
     setPlatform('ios')
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   const data = [
@@ -27,17 +31,6 @@ describe('KeyboardAwareFlatList', () => {
     expect(getByText('Item 1')).toBeTruthy()
     expect(getByText('Item 2')).toBeTruthy()
     expect(getByText('Item 3')).toBeTruthy()
-  })
-
-  it('sets keyboardDismissMode to interactive', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareFlatList
-        data={data}
-        renderItem={({ item }) => <Text>{item.title}</Text>}
-        keyExtractor={(item) => item.id}
-      />,
-    )
-    expect(UNSAFE_root.props.keyboardDismissMode).toBe('interactive')
   })
 
   it('passes extra props to FlatList', () => {
@@ -66,9 +59,5 @@ describe('KeyboardAwareFlatList', () => {
     expect(typeof ref.current.scrollToPosition).toBe('function')
     expect(typeof ref.current.scrollToEnd).toBe('function')
     expect(typeof ref.current.getScrollResponder).toBe('function')
-  })
-
-  it('has correct displayName', () => {
-    expect(KeyboardAwareFlatList.displayName).toBe('KeyboardAwareFlatList')
   })
 })

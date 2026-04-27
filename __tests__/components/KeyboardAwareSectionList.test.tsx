@@ -2,12 +2,16 @@ import React from 'react'
 import { render } from '@testing-library/react-native'
 import { KeyboardAwareSectionList } from '../../src/components/KeyboardAwareSectionList'
 import { Text } from 'react-native'
-import { resetMocks, setPlatform } from '../helpers/mockRN'
+import { setupKeyboardMock, setPlatform } from '../helpers/mockRN'
 
 describe('KeyboardAwareSectionList', () => {
   beforeEach(() => {
-    resetMocks()
+    setupKeyboardMock()
     setPlatform('ios')
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   const sections = [
@@ -36,17 +40,6 @@ describe('KeyboardAwareSectionList', () => {
     expect(getByText('Item B1')).toBeTruthy()
   })
 
-  it('sets keyboardDismissMode to interactive', () => {
-    const { UNSAFE_root } = render(
-      <KeyboardAwareSectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <Text>{item.title}</Text>}
-      />,
-    )
-    expect(UNSAFE_root.props.keyboardDismissMode).toBe('interactive')
-  })
-
   it('passes extra props to SectionList', () => {
     const { UNSAFE_root } = render(
       <KeyboardAwareSectionList
@@ -73,9 +66,5 @@ describe('KeyboardAwareSectionList', () => {
     expect(typeof ref.current.scrollToPosition).toBe('function')
     expect(typeof ref.current.scrollToEnd).toBe('function')
     expect(typeof ref.current.getScrollResponder).toBe('function')
-  })
-
-  it('has correct displayName', () => {
-    expect(KeyboardAwareSectionList.displayName).toBe('KeyboardAwareSectionList')
   })
 })

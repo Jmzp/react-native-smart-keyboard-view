@@ -2,6 +2,10 @@ import { isIOS, isAndroid, DEFAULT_EXTRA_HEIGHT, DEFAULT_KEYBOARD_OPENING_TIME, 
 import { setPlatform } from '../helpers/mockRN'
 
 describe('platform utils', () => {
+  afterEach(() => {
+    setPlatform('ios')
+  })
+
   describe('isIOS', () => {
     it('returns true on iOS', () => {
       setPlatform('ios')
