@@ -42,6 +42,7 @@
     "react-native": ">=0.72.0"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.28.5",
     "@testing-library/react-native": "^12.7.2",
     "@types/jest": "^29.5.12",
     "@types/react": "^18.3.3",
@@ -56,10 +57,12 @@
     "react": "^18.3.1",
     "react-native": "^0.74.2",
     "react-native-builder-bob": "^0.21.3",
+    "react-test-renderer": "^18.3.1",
     "typescript": "^5.4.5"
   },
   "jest": {
     "preset": "react-native",
+    "setupFiles": ["./jest.setup.js"],
     "moduleFileExtensions": [
       "ts",
       "tsx",
@@ -69,10 +72,11 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/lib/"
+      "/lib/",
+      "/helpers/"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(react-native)/)"
+      "node_modules/(?!(react-native|@react-native|@react-native-community|@testing-library)/)"
     ]
   },
   "prettier": {

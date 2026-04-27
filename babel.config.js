@@ -1,3 +1,3 @@
 module.exports = {
-  presets: ['module:react-native-builder-bob/babel'],
+  presets: ['module:@react-native/babel-preset', '@babel/preset-typescript'],
 }
